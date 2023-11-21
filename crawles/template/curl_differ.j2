@@ -1,0 +1,14 @@
+\x1b[1;35;3mcookies\x1b[0m:{%for key,value in cookies.items()%}
+  \x1b[1;33;3m{{key}}\x1b[0m:
+    v1:{{value['v1']}}
+    v2:{{value['v2']}}
+    {%endfor%}
+\x1b[1;35;3mheaders\x1b[0m:{%for key,value in headers.items()%}
+  \x1b[1;33;3m{{key}}\x1b[0m:
+    v1:{{value['v1']}}
+    v2:{{value['v2']}}
+    {%endfor%}
+{% if args %}\x1b[1;35;3margs\x1b[0m:{%for key,value in args.items()%}
+  \x1b[1;33;3m{{key}}\x1b[0m:
+    v1:{{value['v1']}}
+    v2:{{value['v2']}}{%endfor%}{%endif%}

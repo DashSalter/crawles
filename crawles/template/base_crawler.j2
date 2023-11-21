@@ -1,0 +1,33 @@
+# coding = utf-8
+import crawles
+
+url = '{{ url }}'
+
+cookies = { {% for key, value in cookies.items() %}{% if value == '\\' %}
+    '{{key}}': '{{value}}{{value}}',
+    {% else %}
+    '{{key}}': '{{value}}',{% endif %}{% endfor %}
+}
+
+headers = { {% for key, value in headers.items() %}{% if value == '\\' %}
+    '{{key}}': '{{value}}{{value}}',
+    {% else %}
+    '{{key}}': '{{value}}',{% endif %}{% endfor %}
+}
+
+{{args}} = { {% for key, value in data.items() %}{% if value == '\\' %}
+    '{{key}}': {{value}}{{value}},
+    {% else %}
+    '{{key}}': {{value}},{% endif %}{% endfor %}
+}
+
+{% if method != 'json_post' %}
+# 当前时间戳: {{ time }}
+response = crawles.{{method}}(url, headers=headers, {{args}}={{args}}, cookies=cookies)
+print(response.text)
+{% else %}
+# 当前时间戳: {{ time }}
+response = crawles.post(url, headers=headers, json={{args}}, cookies=cookies)
+print(response.text)
+{% endif %}
+

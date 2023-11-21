@@ -1,0 +1,39 @@
+# coding = utf-8
+import crawles
+
+
+class Crawler:
+    def __init__(self):
+        self.url = '{{ url }}'
+
+        self.cookies = { {% for key, value in cookies.items() %}{% if value == '\\' %}
+            '{{key}}': '{{value}}{{value}}',
+            {% else %}
+            '{{key}}': '{{value}}',{% endif %}{% endfor %}
+        }
+
+        self.headers = { {% for key, value in headers.items() %}{% if value == '\\' %}
+            '{{key}}': '{{value}}{{value}}',
+            {% else %}
+            '{{key}}': '{{value}}',{% endif %}{% endfor %}
+        }
+
+        self.{{args}} = { {% for key, value in data.items() %}{% if value == '\\' %}
+            '{{key}}': {{value}}{{value}},
+            {% else %}
+            '{{key}}': {{value}},{% endif %}{% endfor %}
+        }
+
+    def parse(self):{% if method != 'json_post' %}
+        # 当前时间戳: {{ time }}
+        response = crawles.{{method}}(self.url, headers=self.headers, {{args}}=self.{{args}}, cookies=self.cookies)
+        print(response.text)
+{% else %}
+        # 当前时间戳: {{ time }}
+        response = crawles.post(self.url, headers=self.headers, json=self.{{args}}, cookies=self.cookies)
+        print(response.text)
+{% endif %}
+{% if 'true' %}
+crawler = Crawler()
+crawler.parse()
+{% endif %}

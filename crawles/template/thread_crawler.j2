@@ -1,0 +1,55 @@
+# coding = utf-8
+import crawles
+
+
+class SavePipeline(crawles.Pipeline):  # 数据存储类
+    def __init__(self):         # 初始化文件
+        pass  # self.file = open('test.txt', 'w+', encoding='utf-8')
+
+    def save_data(self, item):  # 数据存储
+        pass  # self.file.write(str(item) + '\n')
+
+    def close(self):            # 关闭调用
+        pass  # self.file.close()
+
+
+class ThreadSpider(crawles.ThreadPool):
+    save_class = SavePipeline  # 存储类
+    concurrency = 16           # 并发数量
+    info_display = True        # 爬取信息显示
+    for_index_range = (1, 2)         # 初始循环区间
+
+    def start_requests(self, request, index):
+        request.cookies = { {% for key, value in cookies.items() %}{% if value == '\\' %}
+            '{{key}}': '{{value}}{{value}}',
+            {% else %}
+            '{{key}}': '{{value}}',{% endif %}{% endfor %}
+        }
+        request.headers = { {% for key, value in headers.items() %}{% if value == '\\' %}
+            '{{key}}': '{{value}}{{value}}',
+            {% else %}
+            '{{key}}': '{{value}}',{% endif %}{% endfor %}
+        }
+        request.data = { {% for key, value in data.items() %}{% if value == '\\' %}
+            '{{key}}': {{value}}{{value}},
+            {% else %}
+            '{{key}}': {{value}},{% endif %}{% endfor %}
+        }
+        request.url = '{{ url }}'
+        request.method = '{{ method|upper }}'  # GET POST JSON_POST
+        request.callback = self.parse
+        yield request
+
+    def parse(self, item, request, response):
+        # item:存储对象 request:请求对象 response:响应对象
+        print(response.text)
+
+        # item['text'] = response.text
+        # yield item     # 将数据返回到存储类
+
+        # request.url = 'new_url' # 修改请求对象
+        # yield request  # 请求对象返回，再次请求
+
+{% if 'true' %}
+ThreadSpier()
+{% endif %}

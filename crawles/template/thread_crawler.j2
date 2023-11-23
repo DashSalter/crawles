@@ -16,8 +16,7 @@ class SavePipeline(crawles.Pipeline):  # 数据存储类
 class ThreadSpider(crawles.ThreadPool):
     save_class = SavePipeline  # 存储类
     concurrency = 16           # 并发数量
-    info_display = True        # 爬取信息显示
-    for_index_range = (1, 2)         # 初始循环区间
+    for_index_range = (1, 2)   # 初始循环区间
 
     def start_requests(self, request, index):
         request.cookies = { {% for key, value in cookies.items() %}{% if value == '\\' %}
@@ -51,5 +50,5 @@ class ThreadSpider(crawles.ThreadPool):
         # yield request  # 请求对象返回，再次请求
 
 {% if 'true' %}
-ThreadSpier()
+ThreadSpider()
 {% endif %}

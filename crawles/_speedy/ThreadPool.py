@@ -4,11 +4,20 @@ from concurrent.futures import ThreadPoolExecutor, \
 from copy import copy
 from queue import Queue, Empty
 from threading import Lock
+from time import sleep
 from time import time
 
 from requests.exceptions import Timeout
+from requests.models import Response
 
 from .._api.api import post, get
+
+
+def create_bad_response(status=600, text=b'{}'):
+    response = Response()
+    response.status_code = status  # 状态
+    response._content = text  # 空的数据
+    return response
 
 
 class Pipeline(metaclass=ABCMeta):  # 存储管道类
@@ -39,6 +48,7 @@ class Request:  # 请求对象类
         self.method = 'GET'
         self.data = {}
         self.index = 0
+        self.retry = 0
 
     def copy(self):
         return copy(self)
@@ -47,9 +57,15 @@ class Request:  # 请求对象类
 class ThreadPool:  # 线程类
     save_class = None  # 爬虫存储类
     concurrency = 16  # 并发数量
-    timeout = 3  # 等待时间
-    info_display = True  # 爬取信息显示
     for_index_range = (1, 2)  # 初始循环区间
+
+    random_user_agent = False  # 随机请求头
+    timeout = 3  # 等待时间
+    request_sleep = 0  # 请求间隔/秒
+
+    retry_request = False  # 请求重试
+    retry_interval = 2  # 重试间隔/秒
+    retry_time = 3  # 重试次数/次
 
     def __init__(self):
         self._qsize = 0  # 队列大小
@@ -57,24 +73,11 @@ class ThreadPool:  # 线程类
         self.lock = Lock()  # 锁
         self.request_obj = False  # 请求对象 用于判断请求是否已经完成
         self.timeout_ = 0.2  # 超时断开
+        self.fail_request = 0  # 失败请求
         self.run()
 
-    def record_run_time(func):
-        def inner(*args, **kwargs):
-            start_time = time()
-            result = func(*args, **kwargs)
-            stop_time = time()
-
-            if args[0].info_display:
-                print(f'运行用时:{round(stop_time - start_time, 2)}秒 '
-                      f'请求次数:{result}')
-
-            return result
-
-        return inner
-
-    @record_run_time
     def run(self):
+        start_time = time()
         # 创建生产者
         producer = Producer(self)
         producer.start_request_(self.start_requests)  # 启动
@@ -89,7 +92,9 @@ class ThreadPool:  # 线程类
 
         consumer.wait()  # 等待消费者线程完成
 
-        return producer.request_index
+        stop_time = time()
+        print(f'运行完成 用时:{round(stop_time - start_time, 2)}秒 '
+              f'请求次数:{producer.request_index} 失败请求:{self.fail_request}')
 
     @abstractmethod
     def start_requests(self, request: Request, index: int):
@@ -98,8 +103,6 @@ class ThreadPool:  # 线程类
     @abstractmethod
     def parse(self, item: Item, request_: Request, response):
         pass
-
-    record_run_time = staticmethod(record_run_time)
 
 
 class Producer(ThreadPoolExecutor):  # 生产者
@@ -114,9 +117,17 @@ class Producer(ThreadPoolExecutor):  # 生产者
             completed = [future for future in self.futures if future.done()]
             [self.futures.remove(future) for future in completed]
 
-    def callback_(self, request_: Request) -> None:
+    def pre_request_callback(self, request):
+        if not self.pipeline.random_user_agent:
+            return  # 是否使用随机请求头
+        from random import choice
+        from .user_agent import USER_AGENT_LIST
+        request.headers['User-Agent'] = choice(USER_AGENT_LIST)
 
+    def callback_(self, request_: Request) -> None:
         request_.method = request_.method.upper()
+        self.pre_request_callback(request_)  # 请求之前调用
+
         try:
             if request_.method == 'POST':
                 response = post(request_.url, data=request_.data, timeout=self.pipeline.timeout)
@@ -127,29 +138,52 @@ class Producer(ThreadPoolExecutor):  # 生产者
             else:
                 raise ValueError(f'request_.method:未知的请求类型{request_.method}:POST/JSON_POST/GET')
         except Timeout as e:
-            print(f'RequestTimeout:{e}')
+            self.print_(create_bad_response(), request_, error=e)
             return
         except Exception as e:
-            print(f'RequestError:{e}')
+            self.print_(create_bad_response(), request_, error=e)
             return
+        self.print_(response, request_, error='')
 
-        # 爬取信息显示
-        if self.pipeline.info_display:
-            with self.pipeline.lock:
-                print(f'status:{response} index:{request_.index}')
-
-        # 回调数据获取
+        # 回调函数/管道数据判断
         for return_ in request_.callback(Item(), request_, response):
             if return_.__name__ == 'Request':
                 return_: Request
                 with self.pipeline.lock:  # 全局请求次数锁
                     self.request_index += 1
                     request_.index = self.request_index
+
                 self.futures.append(self.submit(self.callback_, request_.copy()))
+                sleep(self.pipeline.request_sleep)
 
             elif return_.__name__ == 'Item' or isinstance(return_, dict):
                 return_: Item
                 self.pipeline.queue_.put(return_)
+
+    def print_(self, response, request_, error):
+        # 爬取信息显示
+        with self.pipeline.lock:
+            completed = [future if future.done() else None for future in self.futures]
+            none_count = max(completed.count(None), 1) - 1
+
+            if response.status_code < 400:
+                print(f'status:{response.status_code} '
+                      f'index:{str(request_.index).ljust(3, " ")} '
+                      f'待完成:{str(none_count).ljust(3, " ")} {error}')
+            elif self.pipeline.retry_request and request_.retry < self.pipeline.retry_time:  # 运行重新尝试
+                request_.retry += 1  # 是否进行重试
+                sleep(self.pipeline.retry_interval)
+                print(f'status:\x1b[1;31;3m{response.status_code}\x1b[0m '
+                      f'index:{str(request_.index).ljust(3, " ")} '
+                      f'待完成:{str(none_count).ljust(3, " ")} 重试次数:{request_.retry}  {error}')
+                self.futures.append(self.submit(self.callback_, request_.copy()))
+            else:
+                self.pipeline.fail_request += 1
+                print(f'status:\x1b[1;31;3m{response.status_code}\x1b[0m '
+                      f'index:{str(request_.index).ljust(3, " ")} '
+                      f'待完成:{str(none_count).ljust(3, " ")}\n    '
+                      f'error_url:{request_.url} error_data:{request_.data}\n    '
+                      f'error:{error}')
 
     def start_request_(self, start_requests) -> None:
         # 初始链接请求
@@ -159,7 +193,9 @@ class Producer(ThreadPoolExecutor):  # 生产者
                 with self.pipeline.lock:
                     self.request_index += 1
                     request_.index = self.request_index
+
                 self.futures.append(self.submit(self.callback_, request_))
+                sleep(self.pipeline.request_sleep)
 
 
 class Consumer(ThreadPoolExecutor):  # 消费者

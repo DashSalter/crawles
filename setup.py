@@ -5,7 +5,7 @@ with open(r"F:\please_package\README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="crawles",  # 用自己的名替换其中的YOUR_USERNAME_
-    version="0.3.3",  # 包版本号，便于维护版本
+    version="0.3.4",  # 包版本号，便于维护版本
     author="苯环",  # 作者，可以写自己的姓名
     author_email="1431705288@qq.com",  # 作者联系方式，可写自己的邮箱地址
     description="这是一个简单的爬虫封装模块，封装一些请求优化与下载功能",  # 包的简述

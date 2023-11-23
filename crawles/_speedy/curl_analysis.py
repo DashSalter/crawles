@@ -60,7 +60,8 @@ class CurlAnaly:
     def url_args_get(self) -> (str, dict):
         """url和请求参数的获取"""
         # 提取 URL
-        url = findall('''curl\s*['"](.*?)['"]''', self.curl_text)[0]
+        url_data = findall('''curl\s*['"](.*?)['"]''', self.curl_text)
+        url = url_data[0] if url_data else ''
 
         # 提取参数
         parsed_url = urlparse(url)  # url

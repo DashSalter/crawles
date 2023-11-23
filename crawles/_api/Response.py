@@ -20,9 +20,8 @@ class Response(Response):
             raise TypeError('数据转换异常异常!: etree.HTML(self.response.text)')
 
     def findall(self, pattern, flags=0):
-        if isinstance(flags, str):
-            if str(flags).lower() == 's':
-                flags = 16
+        if isinstance(flags, str) and str(flags).lower() == 's':
+            flags = 16
         return findall(pattern, self.response.text, flags=flags)
 
     @property

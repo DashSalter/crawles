@@ -1,26 +1,13 @@
-def _colour():
-    s = "hello, world"
-    for i in range(0,201):
-        a = f'\x1b[1;{i};3m%s-{s}\x1b[0m' % i
-        print(a,[a])
+import types
 
-    # print('\033[1;32;3m%s\033[0m' % s)
-    # print('\033[1;33;3m%s\033[0m' % s)
-    # print('\033[1;34;3m%s\033[0m' % s)
-    # print('\033[1;35;3m%s\033[0m' % s)
-    # print('\033[1;36;3m%s\033[0m' % s)
-# _colour()
+def a():
+    return 1
 
-# aa = str(""\x1b[1;39;3m39\x1b[0m')
-# print(aa)
-# from colorama import init, Fore, Back, Style
-# init(autoreset=True)
+def b():
+    yield 2
 
-# text = str("\x1b[1;34;3m39\x1b[0m")
-# print(text)
-
-import fake_useragent
-
-ua = fake_useragent.UserAgent()
-user_agent = ua.random
-print(user_agent)
+result = b()
+if isinstance(result, types.GeneratorType):
+    print("result 是生成器对象")
+else:
+    print("result 不是生成器对象")

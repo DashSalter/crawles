@@ -15,9 +15,8 @@ class SavePipeline(crawles.Pipeline):  # 数据存储类
 
 class ThreadSpider(crawles.ThreadPool):
     save_class = SavePipeline  # 存储类
-    concurrency = 16  # 并发数量
-    for_index_range = (1, 3)  # 初始循环区间
-    timeout = 20  # 等待时间
+    concurrency = 15  # 并发数量
+    for_index_range = (1, 2)  # 初始循环区间
     retry_request = True  # 爬取重试
 
     def start_requests(self, request, index):

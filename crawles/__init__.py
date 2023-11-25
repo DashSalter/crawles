@@ -5,7 +5,7 @@ from ._speedy.ThreadPool import Item, ThreadPool, Pipeline, Request
 from ._speedy.curl_analysis import curl_anal, curl_anal_cls, curl_anal_thread, curl_differ
 from ._speedy.head_format import head_format
 from ._speedy.js_call import execjs
-
+from ._data_save.CsvOpen import CsvOpen
 __version__ = "0.3.3"
 
 __all__ = [
@@ -33,4 +33,6 @@ __all__ = [
     'ThreadPool',
     'Pipeline',
     'Request',
+
+    'CsvOpen'
 ]

@@ -9,7 +9,7 @@ __pycache__/
 .idea/encodings.xml
 
 # 文件夹
-/test/
+test/
 
 # 文件
 setup.py

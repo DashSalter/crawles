@@ -1,7 +1,7 @@
 from ._data_save.image_save import image_save
 from ._speedy.MyThread import decorator_thread, MyThread
 from ._speedy.ThreadPool import Item, ThreadPool, Pipeline, Request
-from ._speedy.head_format import head_format
+from ._speedy.head_format import header_format
 from ._speedy.js_call import execjs
 from ._data_save.CsvOpen import CsvOpen
 from ._speedy.MetaSession import SingletonMeta
@@ -34,7 +34,7 @@ __all__ = [
     'MyThread',
     'execjs',  # js
 
-    'head_format',  # 格式化
+    'header_format',  # 格式化
 
     # curl解析
     'curl_anal',

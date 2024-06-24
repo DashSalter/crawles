@@ -1,12 +1,12 @@
 from re import findall
 
 
-def head_format(header_data: str) -> dict:
+def header_format(header_string: str) -> dict:
     """请求数据格式化函数"""
-    if not isinstance(header_data, str):
+    if not isinstance(header_string, str):
         raise TypeError('The parsed object needs to be a string')
 
-    data = findall('([-a-zA-Z]+)\s*:\s*(.*)', header_data)
+    data = findall('\s*([-a-zA-Z0-9]+)\s*:\s*(.*)', header_string)
     return {key: value for key, value in data}
 
 
@@ -20,4 +20,4 @@ if __name__ == '__main__':
     sec-ch-ua-platform: "Windows"
     '''
     import crawles
-    crawles.op(head_format(data1))
+    crawles.op(header_format(data1))

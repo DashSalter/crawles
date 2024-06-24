@@ -1,15 +1,27 @@
-**0.3.3更新**
+**当前方法以及功能** 
 
-1 增加了请求参数类型自动识别
+header_format:
+- 将字符串格式的请求头数据转换为字典
 
-2 增加了curl的请求参数对比
-
-
-
-**当前功能**
-
-1 将curl数据转换为普通代码，类代码和线程池代码
-
-2 可以将请求的数据进行格式化，请求参数可以直接是字符串
-
-3 优化了请求的响应体对象
+```python
+    data1 = '''
+    :Accept: */*
+    Accept-Encoding:zh-CN,zh;q=0.9
+    X-Requested-With      :   XMLHttpRequest
+    sec-ch-ua: "Not.A/Brand";v="8", "Chromium";v="114", "Google Chrome";v="114"
+    sec-ch-ua-mobile: ?0
+    sec-ch-ua-platform: "Windows"
+    '''
+    import crawles
+    crawles.op(crawles.header_format(data1))
+```
+```
+{
+  'Accept': '*/*',
+  'Accept-Encoding': 'zh-CN,zh;q=0.9',
+  'X-Requested-With': 'XMLHttpRequest',
+  'sec-ch-ua': '"Not.A/Brand";v="8", "Chromium";v="114", "Google Chrome";v="114"',
+  'sec-ch-ua-mobile': '?0',
+  'sec-ch-ua-platform': '"Windows"'
+}
+```

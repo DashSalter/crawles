@@ -1,2 +1,22 @@
-/setup.py
+# 隐藏文件
+__pycache__/
+
+# 虚拟环境
+env/
+
+# PyCharm
 /.idea/
+.idea/encodings.xml
+
+# 文件夹
+node_modules/*
+test/*
+test/__init__.py
+
+
+# 文件
+setup.py
+package-lock.json
+.gitignore
+package.json
+

@@ -1,5 +1,6 @@
 # coding = utf-8
 import crawles
+from time import time
 
 url = 'https://apps.game.qq.com/cgi-bin/ams/module/ishow/V1.0/query/workList_inc.cgi'
 
@@ -33,7 +34,6 @@ headers = {
     'sec-fetch-site': 'same-site',
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36 Edg/113.0.1774.57',
 }
-from time import time
 
 a = time()
 for page in range(1, 2):
@@ -58,8 +58,9 @@ for page in range(1, 2):
     # 当前时间戳: 1698735867.234549
     response = crawles.get(url, headers=headers, params=params, cookies=cookies)
     from urllib import parse, request
+
     d = {}
-    for i in response.json['List']:
+    for i in response.json()['List']:
         image_name = i['sProdName']  # 获取名字
         image_name = parse.unquote(image_name)  # 解析名称
         for j in range(2, 9):  # 获取2-8的图片链接

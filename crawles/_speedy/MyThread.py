@@ -23,13 +23,8 @@ class MyThread(Thread):
 
 
 def decorator_thread(func):
-    """
-    多线程装饰器，用于装饰单个函数
-    :param func:
-    :return:
-    """
-
+    """多线程装饰器，用于装饰单个函数"""
     def inner(*args, **kwargs):
-        MyThread(func, *args, **kwargs)
+        return MyThread(func, *args, **kwargs)
 
     return inner

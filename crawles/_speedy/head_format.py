@@ -1,24 +1,23 @@
-def head_format(header_data):  # 请求数据格式化函数
-    head_dict = {}
-    for data in header_data.splitlines():  # 将文本以行进行分割
-        data = data.strip()  # 去重字符串左边的空格
-        if not data:  # 过滤掉空的数据 ''  '    '
-            continue
-        if data.startswith(':'):  # 去重字符串的第一个冒号
-            data = data.lstrip(':')
+from re import findall
 
-        key, value = data.split(':', maxsplit=1)
 
-        # if 'accept-encoding' == str(key).lower():  # 过滤掉Accept-Encoding参数
-        #     continue
-        head_dict[key] = str(value).replace('^', '')
+def head_format(header_data: str) -> dict:
+    """请求数据格式化函数"""
+    if not isinstance(header_data, str):
+        raise TypeError('The parsed object needs to be a string')
 
-    return head_dict
+    data = findall('([-a-zA-Z]+)\s*:\s*(.*)', header_data)
+    return {key: value for key, value in data}
 
 
 if __name__ == '__main__':
     data1 = '''
-    type: 0
-    formhash: CDD4E5BDEA
+    :Accept: */*
+    Accept-Encoding:zh-CN,zh;q=0.9
+    X-Requested-With      :   XMLHttpRequest
+    sec-ch-ua: "Not.A/Brand";v="8", "Chromium";v="114", "Google Chrome";v="114"
+    sec-ch-ua-mobile: ?0
+    sec-ch-ua-platform: "Windows"
     '''
-    print(head_format(data1))
+    import crawles
+    crawles.op(head_format(data1))

@@ -1,6 +1,4 @@
-from requests import Session
-
-from .optimized import optimized
+from curl_cffi.requests.session import Session
 
 
 class SingletonMeta(type):
@@ -15,7 +13,6 @@ class MetaSession(metaclass=SingletonMeta):
     """使用同一个Session,需要继承单例对象"""
     session = Session()
 
-    @optimized
     def meta_session(self, method, url, **kwargs):
         return self.session.request(method=method, url=url, **kwargs)
 

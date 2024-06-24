@@ -10,7 +10,7 @@ from urllib.parse import parse_qs, urlparse
 from jinja2 import Template
 
 
-class AnalyObj:
+class AnalyzeObj:
     """解析对象"""
 
     def __init__(self, url: str, method: str,
@@ -22,7 +22,8 @@ class AnalyObj:
         self.cookies = cookies
 
 
-def template_get(template_name):  # 模板获取
+def template_get(template_name: str) -> Template:
+    """模板获取"""
     current_path = path.abspath(__file__)  # 绝对路径获取
     parent_dir = path.dirname(path.dirname(current_path))
 
@@ -33,26 +34,26 @@ def template_get(template_name):  # 模板获取
 
 
 class CodeGener:
-    def __init__(self, analy: AnalyObj, template_name: str):
-        self.analy = analy
+    def __init__(self, analyze: AnalyzeObj, template_name: str):
+        self.analyze = analyze
 
         self.template = template_get(template_name)
 
     def crawler_craft(self) -> str:
         """crawles 代码与模板合成传参"""
-        args = 'data' if self.analy.method == 'post' else 'params'
+        args = 'data' if self.analyze.method == 'post' else 'params'
 
         # 判断数据的类型，并且为字符串加上引号
-        self.analy.data = {k: f"\'{v}\'" if isinstance(v, str) else v for k, v in self.analy.data.items()}
+        self.analyze.data = {k: f"\'{v}\'" if isinstance(v, str) else v for k, v in self.analyze.data.items()}
 
-        return self.template.render(url=self.analy.url, cookies=self.analy.cookies,
-                                    headers=self.analy.headers, args=args,
-                                    data=self.analy.data, method=self.analy.method,
+        return self.template.render(url=self.analyze.url, cookies=self.analyze.cookies,
+                                    headers=self.analyze.headers, args=args,
+                                    data=self.analyze.data, method=self.analyze.method,
                                     time=time())
 
 
-class CurlAnaly:
-    def __init__(self, curl_text):
+class CurlAnalyze:
+    def __init__(self, curl_text: str):
         self.curl_text = curl_text.replace('^', '') \
             .replace('   -', ' \n   -') \
             .replace("'", '"')  # 预处理
@@ -60,7 +61,7 @@ class CurlAnaly:
     def url_args_get(self) -> (str, dict):
         """url和请求参数的获取"""
         # 提取 URL
-        url_data = findall('''curl\s*['"](.*?)['"]''', self.curl_text)
+        url_data = findall("""curl\s['"](.*?)['"]""", self.curl_text)
         url = url_data[0] if url_data else ''
 
         # 提取参数
@@ -79,16 +80,10 @@ class CurlAnaly:
         if not head_data:
             return {}, {}
 
-        head_dict = {}
-        cookies = {}
+        head_dict, cookies = {}, {}
         for data in head_data:  # 将文本以行进行分割
-            data: str = data.strip()
-            if not data:  # 过滤掉空的数据
-                continue
-            if data.startswith(':'):  # 去重字符串的第一个冒号
-                data = data.lstrip(':')
+            key, value = findall('([-a-zA-Z]+)\s*:\s*(.*)', data)[0]
 
-            key, value = data.split(':', maxsplit=1)
             if findall('cookie', key, flags=I):  # cookie 解析
                 cookie_list = [str(c).strip().split('=', 1) for c in str(value).split(';')]
                 cookies = {i[0]: i[1] for i in cookie_list if len(i) == 2}
@@ -99,7 +94,6 @@ class CurlAnaly:
 
     def data_get(self) -> (str, dict):
         """method and data"""
-
         data_list: list = findall('''--data-raw ['"](.*?)['"] ''', self.curl_text)
         if not data_list:
             return 'get', dict()
@@ -111,7 +105,7 @@ class CurlAnaly:
             data = {key: value for key, value in (i.split('=') for i in data_str.split('&'))}
             return 'post', data
 
-    def curl_analy(self) -> AnalyObj:
+    def curl_analyze(self) -> AnalyzeObj:
         """请求数据解析"""
         url, data = self.url_args_get()  # 参数解析
         headers, cookies = self.headers_get()
@@ -120,13 +114,11 @@ class CurlAnaly:
         data = {**data, **data_dict}
 
         # 解密value 并且排序字典让其变得有序
-        data = OrderedDict({k: parse.unquote(data[k])
-        if isinstance(data[k], str) else data[k] for k in sorted(data)})
-
+        data = OrderedDict({k: parse.unquote(data[k]) if isinstance(data[k], str) else data[k] for k in sorted(data)})
         headers = OrderedDict({k: headers[k] for k in sorted(headers)})
         cookies = OrderedDict({k: cookies[k] for k in sorted(cookies)})
 
-        return AnalyObj(url, method, data, headers, cookies)
+        return AnalyzeObj(url, method, data, headers, cookies)
 
 
 class TemplateDecor:
@@ -153,9 +145,9 @@ class TemplateDecor:
 
 
 @TemplateDecor
-def curl_anal(curl_str) -> str:
+def curl_anal(curl_str: str) -> str:
     """基础模板"""
-    curl_anal_ = CurlAnaly(curl_str).curl_analy()
+    curl_anal_ = CurlAnalyze(curl_str).curl_analyze()
     # 数据解析 curl_anal
     # base_crawler.j2 使用的模板文件
     # crawler_craft 调用的合成方法
@@ -163,26 +155,33 @@ def curl_anal(curl_str) -> str:
 
 
 @TemplateDecor
-def curl_anal_cls(curl_str) -> str:
+def curl_anal_def(curl_str: str) -> str:
+    """函数模板"""
+    curl_anal_ = CurlAnalyze(curl_str).curl_analyze()  # 数据解析
+    return CodeGener(curl_anal_, 'def_crawler.j2').crawler_craft()
+
+
+@TemplateDecor
+def curl_anal_cls(curl_str: str) -> str:
     """类模板"""
-    curl_anal_ = CurlAnaly(curl_str).curl_analy()  # 数据解析
+    curl_anal_ = CurlAnalyze(curl_str).curl_analyze()  # 数据解析
     return CodeGener(curl_anal_, 'class_crawler.j2').crawler_craft()
 
 
 @TemplateDecor
-def curl_anal_thread(curl_str) -> str:
+def curl_anal_thread(curl_str: str) -> str:
     """线程模板"""
-    curl_anal_ = CurlAnaly(curl_str).curl_analy()  # 数据解析
+    curl_anal_ = CurlAnalyze(curl_str).curl_analyze()  # 数据解析
     return CodeGener(curl_anal_, 'thread_crawler.j2').crawler_craft()
 
 
-def dict_differ(d1, d2):
+def dict_differ(d1: dict, d2: dict) -> dict:
     # 差异获取
     return {**{k: {'v1': v, 'v2': d2.get(k, '')} for k, v in d1.items() if d2.get(k) != v},
             **{k: {'v1': d1.get(k, ''), 'v2': v} for k, v in d2.items() if d1.get(k) != v}}
 
 
-def color_extrude(dict_):
+def color_extrude(dict_: dict) -> dict:
     """数据不同位置颜色突出"""
     for k, v in dict_.items():
         v1, v2 = v['v1'], v['v2']
@@ -194,10 +193,10 @@ def color_extrude(dict_):
     return dict_
 
 
-def curl_differ(curl_str1, curl_str2) -> str:
+def curl_differ(curl_str1: str, curl_str2: str) -> str:
     """curl 差异获取"""
-    curl_anal_1 = CurlAnaly(curl_str1).curl_analy()  # 数据解析
-    curl_anal_2 = CurlAnaly(curl_str2).curl_analy()
+    curl_anal_1 = CurlAnalyze(curl_str1).curl_analyze()  # 数据解析
+    curl_anal_2 = CurlAnalyze(curl_str2).curl_analyze()
     # 获取差异数据
     cookies = color_extrude(dict_differ(curl_anal_1.cookies, curl_anal_2.cookies))
     headers = color_extrude(dict_differ(curl_anal_1.headers, curl_anal_2.headers))

@@ -1,8 +1,10 @@
+from typing import Union
+
 import execjs as j
 
 
 class ExecJs:
-    def __init__(self, filename):
+    def __init__(self, filename: Union[str, bytes]):
         self.filename = filename
         f = open(self.filename, 'r', encoding='utf-8')
         self.js_data = f.read()
@@ -17,6 +19,6 @@ class ExecJs:
 execjs = ExecJs
 
 if __name__ == '__main__':
-    js = execjs('wb.js')
+    js = execjs('1')
     # 使用js函数
-    rest = js.call('func/函数名', '参数1', '参数2', '参数......')
+    result = js.call('func/函数名', '参数1', '参数2', '参数......')

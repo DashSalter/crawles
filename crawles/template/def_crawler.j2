@@ -1,0 +1,40 @@
+# coding = utf-8
+import crawles
+
+
+def get_request_data():
+    url = '{{ url }}'
+
+    cookies = { {% for key, value in cookies.items() %}{% if value == '\\' %}
+        '{{key}}': '{{value}}{{value}}',
+        {% else %}
+        '{{key}}': '{{value}}',{% endif %}{% endfor %}
+    }
+
+    headers = { {% for key, value in headers.items() %}{% if value == '\\' %}
+        '{{key}}': '{{value}}{{value}}',
+        {% else %}
+        '{{key}}': '{{value}}',{% endif %}{% endfor %}
+    }
+
+    {{args}} = { {% for key, value in data.items() %}{% if value == '\\' %}
+        '{{key}}': {{value}}{{value}},
+        {% else %}
+        '{{key}}': {{value}},{% endif %}{% endfor %}
+    }
+
+    # 当前时间戳: {{ time }}
+    {% if method != 'json_post' %}response = crawles.{{method}}(url, headers=headers, {{args}}={{args}}, cookies=cookies)
+    return response
+    {% else %}response = crawles.post(url, headers=headers, json={{args}}, cookies=cookies)
+    return response
+    {% endif %}
+
+def response_parse(response):
+    print(response.text)
+
+
+if __name__ == '__main__':
+    response_data = get_request_data()
+    response_parse(response_data)
+

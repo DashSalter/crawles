@@ -14,10 +14,10 @@ class SavePipeline(crawles.Pipeline):  # 数据存储类
 
 
 class ThreadSpider(crawles.ThreadPool):
-    save_class = SavePipeline  # 存储类
-    concurrency = 15  # 并发数量
-    for_index_range = (1, 2)  # 初始循环区间
-    retry_request = True  # 爬取重试
+    pipeline_class = SavePipeline  # 存储类
+    concurrency = 16  # 并发数量
+    for_index_range = (1, 3)  # 初始循环区间
+
 
     def start_requests(self, request, index):
         request.cookies = {
@@ -47,21 +47,25 @@ class ThreadSpider(crawles.ThreadPool):
         }
         request.url = f'https://www.douguo.com/jingxuan/{index}'
         request.method = 'GET'  # GET POST JSON_POST
-        request.callback = self.parse
+        request.retry.retry_request = True
+        request.timeout = 10
         yield request
 
     def parse(self, item, request, response):
         # item:存储对象 request:请求对象 response:响应对象
         # print(response.text)
 
-        data = response.findall('<a class="cover" href="(.*?)" target="_blank" style="position: relative">')
+        data = response.findall('<a class="cover" href="(.*?)" target="_blank" style="position: relative">',
+                                'i')
+
         for i in data:
             request.url = f'https://www.douguo.com{i}'
             request.callback = self.ap
             yield request
 
     def ap(self, item, request, response):
-        data = (response.findall('<h2 class="mini-title">(.*?)</h2>'))
+        # response.findall()
+        data = response.findall('<h2 class="mini-title">(.*?)</h2>')
         item['data'] = data
         yield item
 

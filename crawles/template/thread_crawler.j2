@@ -36,7 +36,6 @@ class ThreadSpider(crawles.ThreadPool):
         }
         request.url = '{{ url }}'
         request.method = '{{ method|upper }}'  # GET POST JSON_POST
-        request.callback = self.parse
         yield request
 
     def parse(self, item, request, response):

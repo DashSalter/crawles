@@ -16,8 +16,8 @@ class ImageSave:
         self.timeout = aiohttp.ClientTimeout(total=10)
 
     @staticmethod
-    def __create_path(iamge_path):  # 路径创建
-        path = os.path.split(iamge_path)[0]
+    def __create_path(image_path):  # 路径创建
+        path = os.path.split(image_path)[0]
         if path:
             os.makedirs(path, exist_ok=True)
 
@@ -41,11 +41,11 @@ class ImageSave:
         tasks = [self.loop.create_task(self.__job(url, path)) for url, path in url_dict.items()]  # 建立所有任务
         self.loop.run_until_complete(asyncio.gather(*tasks))
 
-    def image_save(self, image_dict, astrict=100, timeout=10, **kwargs):
+    def image_save(self, image_dict, concurrent=100, timeout=10, **kwargs):
         """多张图片保存{链接:文件保存地址}"""
         self.kwargs = kwargs  # 请求头等信息
         self.timeout = aiohttp.ClientTimeout(total=timeout)  # 超时检测
-        self.__semaphore = asyncio.Semaphore(astrict)  # 最大并法数量
+        self.__semaphore = asyncio.Semaphore(concurrent)  # 最大并发数量
         self.__data_detection(image_dict)  # 数据格式检测
         self.__create_loop(image_dict)  # 协程建立
 
@@ -57,4 +57,4 @@ class ImageSave:
 
 
 image_save = ImageSave().image_save
-# {链接：文件保存地址, 链接：文件保存地址}
+# {链接: 文件保存地址, 链接: 文件保存地址}

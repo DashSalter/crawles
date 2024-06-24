@@ -14,14 +14,10 @@ class SavePipeline(crawles.Pipeline):  # 数据存储类
 
 
 class ThreadSpier(crawles.ThreadPool):
-    save_class = SavePipeline  # 存储类
+    pipeline_class = None  # 存储类
     concurrency = 16  # 并发数量
-    info_display = True  # 爬取信息显示
-    timeout = 5
 
-    def start_requests(self, request,index):
-        request.cookies = {
-        }
+    def start_requests(self, request, index):
         request.headers = {
             'Accept': '*/*',
             'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
@@ -46,14 +42,13 @@ class ThreadSpier(crawles.ThreadPool):
         }
         request.url = 'http://www.xinfadi.com.cn/getPriceData.html'
         request.method = 'POST'
-        request.callback = self.parse
         yield request
 
     def parse(self, item, request, response):
         # item:存储对象 request:请求对象 response:响应对象
         # print(response.text)
 
-        item['json'] = response.json
+        item['json'] = response.json()
         yield item  # 将数据返回到存储类
 
         request.data['current'] += 1

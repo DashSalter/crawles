@@ -19,4 +19,5 @@ setup.py
 package-lock.json
 .gitignore
 package.json
+MANIFEST.in
 

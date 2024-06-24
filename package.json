@@ -1,7 +1,0 @@
-{
-  "name": "please_package",
-  "version": "1.0.0",
-  "dependencies": {
-    "crypto-js": "^4.2.0"
-  }
-}

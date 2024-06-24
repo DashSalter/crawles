@@ -1,5 +1,0 @@
-recursive-include crawles/template *.j2
-recursive-include crawles *.pyi
-recursive-exclude test *
-
-
